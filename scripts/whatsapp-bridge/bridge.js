@@ -36,6 +36,7 @@ import { classifyOwnerMessageGate } from './owner_message_gate.js';
 import {
   addMentions,
   buildPollPayload,
+  createCredsSaver,
   createReconnectScheduler,
   createVersionResolver,
   installConsoleStamps,

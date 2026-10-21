@@ -11,7 +11,9 @@
  */
 
 import { strict as assert } from 'node:assert';
+import { readFileSync } from 'node:fs';
 
+import * as helpers from './bridge_helpers.js';
 import { createCredsSaver } from './bridge_helpers.js';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -54,6 +56,17 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   process.off('unhandledRejection', onUnhandled);
 
   assert.equal(unhandled, 0);
+}
+
+// bridge.js imports every helper it calls. These tests never load bridge.js,
+// so a missing import would only show up as a ReferenceError at bridge start.
+{
+  const source = readFileSync(new URL('./bridge.js', import.meta.url), 'utf8');
+  const [, importList] = source.match(/import \{([^}]+)\} from '\.\/bridge_helpers\.js';/);
+  const imported = new Set(importList.split(',').map(name => name.trim()));
+  const missing = Object.keys(helpers).filter(name => source.includes(`${name}(`) && !imported.has(name));
+
+  assert.deepEqual(missing, []);
 }
 
 console.log('bridge.creds.test.mjs: all assertions passed');
